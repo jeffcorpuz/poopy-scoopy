@@ -1,21 +1,23 @@
-from flask import Flask, render_template, request, jsonify
+# app.py
+from flask import Flask, request, send_file
+from PIL import Image
+from io import BytesIO
 from flask_cors import CORS
-from typing import Dict  # Add this line
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route('/flip-photo', methods=['POST'])
+def flip_photo():
+    file = request.files['file']
+    img = Image.open(file)
+    flipped_img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-@app.route('/report', methods=['POST'])
-def report():
-    data: Dict[str, str] = request.get_json()
-    # Process and store the report data (e.g., location, timestamp)
-    # You can save the data to a database or a file.
+    img_io = BytesIO()
+    flipped_img.save(img_io, 'JPEG')
+    img_io.seek(0)
 
-    return jsonify({'message': 'Report received successfully!'})
+    return send_file(img_io, mimetype='image/jpeg')
 
 if __name__ == '__main__':
     app.run(debug=True)
